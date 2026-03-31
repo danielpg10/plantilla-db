@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entorno de Operaciones - Inteligencia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #f1f5f9; --primary: #3b82f6; --primary-hover: #2563eb;
+            --text-dark: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
+            --card-bg: #ffffff; --success: #10b981; --success-bg: #d1fae5;
+            --android-color: #10b981; --ios-color: #3b82f6; --danger: #ef4444;
+            --dev-bg: #fef08a; --dev-text: #854d0e;
+        }
+
+        * { font-family: 'Inter', -apple-system, sans-serif; box-sizing: border-box; padding: 0; margin: 0;}
+        body { background-color: var(--bg-body); color: var(--text-dark); min-height: 100vh; padding: 2rem 1rem; display: flex; flex-direction: column; align-items: center; }
+        
+        .dashboard { width: 100%; max-width: 1400px; }
+        
+        /* Top Navigation */
+        .top-nav { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;}
+        .top-nav-titles h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.02em; color: #0f172a;}
+        .top-nav-titles p { color: var(--text-muted); margin-top: 0.25rem; font-size: 0.95rem; }
+        .nav-tabs { display: flex; gap: 0.5rem; background: #e2e8f0; padding: 0.35rem; border-radius: 0.75rem;}
+        .nav-tab { padding: 0.6rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); border-radius: 0.5rem; cursor: pointer; transition: 0.2s; border: none; background: transparent;}
+        .nav-tab.active { background: #fff; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
+
+        /* Buttons */
+        .btn { background: var(--primary); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2); display: inline-flex; align-items: center; gap: 0.5rem;}
+        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; transform: none;}
+
+        /* Views */
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px);} to {opacity: 1; transform: translateY(0);} }
+
+        /* Sleek Summary Cards */
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+        .sc-card { background: var(--card-bg); border-radius: 1rem; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); padding: 1.25rem; transition: transform 0.2s; position: relative; cursor: pointer;}
+        .sc-card:hover { transform: translateY(-3px); border-color: #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);}
+        .sc-title { font-weight: 700; color: #0f172a; font-size: 1.1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;}
+        .hint-icon { position: absolute; top: -8px; right: -8px; background: var(--primary); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        .sc-card:hover .hint-icon { opacity: 1;}
+        .sc-section { display: flex; flex-direction: column; gap: 0.4rem; }
+        .sc-head { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;}
+        .sc-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .sc-db { font-family: monospace; font-size: 0.85rem; color: var(--primary); font-weight: 600; }
+        .sc-plats { display: flex; gap: 0.75rem; font-size: 0.8rem; color: #334155; }
+        .sc-divider { height: 1px; background: var(--border); margin: 0.8rem 0; opacity: 0.5;}
+
+        /* Filters Bar */
+        .filters-container { display: flex; gap: 1rem; background: #fff; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap;}
+        .filter-item { display: flex; flex-direction: column; gap: 0.3rem;}
+        .filter-item label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;}
+        .filter-item select { padding: 0.5rem 2rem 0.5rem 0.75rem; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 0.4rem;}
+
+        /* Main Tables */
+        .card { background: var(--card-bg); border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); border: 1px solid var(--border); overflow: hidden; margin-bottom:2rem;}
+        .table-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: #f8fafc;}
+        .table-toolbar h3 { font-size: 1.1rem; font-weight: 700;}
+        .table-container { width: 100%; overflow-x: auto; min-height: 200px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background: #fff; padding: 0.75rem 1.25rem; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); letter-spacing: 0.05em; font-weight: 700;}
+        td { padding: 0.65rem 1.25rem; border-bottom: 1px solid var(--border); font-size: 0.85rem; vertical-align: middle;}
+        tr:hover td { background: #f8fafc; }
+        
+        .pkg-pill { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; font-family: monospace; border: 1px solid var(--border); background: #fff;}
+        .pkg-pill.android { border-color: #a7f3d0; color: #065f46; background: #ecfdf5; }
+        .pkg-pill.ios { border-color: #bfdbfe; color: #1e3a8a; background: #eff6ff;}
+        .pkg-subtext { font-size:0.75rem; color:var(--text-muted); font-family:monospace; margin-left:0.25rem; margin-top:0.1rem;}
+
+        .ver-highlight { font-weight: 700; color: #0f172a;}
+        .ver-max { color: var(--text-muted); font-size: 0.75rem; margin-left: 0.25rem;}
+        .db-monotext { font-family: monospace; font-weight: 500; color: #1e293b; font-size: 0.85rem; }
+        .date-text { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;}
+        .badge { padding: 0.2rem 0.5rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem;}
+        
+        .btn-icon-dl { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; width: 32px; height: 32px; border-radius: 0.4rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; margin: auto;}
+        .btn-icon-dl:hover { background: var(--primary); color: white; border-color: var(--primary);}
+
+        /* Modal Resets & Specifics */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal { background: white; border-radius: 1.25rem; width: 100%; max-width: 680px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); transform: scale(0.95); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; max-height: 90vh;}
+        .modal-overlay.open .modal { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem; border-bottom: 1px solid var(--border); background: #f8fafc; border-radius: 1.25rem 1.25rem 0 0;}
+        .modal-header h2 { font-size: 1.25rem; font-weight: 700; color: #1e293b;}
+        .close-btn { background: white; border: 1px solid var(--border); cursor: pointer; color: var(--text-muted); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .close-btn:hover { background: #f1f5f9; color: var(--danger); }
+        .modal-body { padding: 2rem; overflow-y: auto; flex: 1;}
+        .modal-footer { padding: 1.25rem 2rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 1rem; background: #f8fafc; border-radius: 0 0 1.25rem 1.25rem;}
+        
+        label.main-label { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: #334155; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-row { display: flex; gap: 1.25rem; }
+        .form-row .form-group { flex: 1; margin-bottom: 0;}
+        input[type="text"], select { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 0.5rem; font-size: 0.95rem; background: #fff; color: #0f172a; transition: all 0.2s;}
+        input:focus:not(:disabled), select:focus:not(:disabled) { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2em;}
+        select:disabled { opacity: 0.5; background-color: #f8fafc;}
+        
+        .platform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        .box-section { background: #f8fafc; border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; transition: all 0.2s; display: flex; flex-direction: column; gap: 1rem;}
+        .box-section.inactive { opacity: 0.6; background: #f1f5f9; border-style: dashed; }
+        .box-section-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;}
+        
+        /* Toggles */
+        .toggle-mini { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0;}
+        .toggle-mini input { opacity: 0; width: 0; height: 0; }
+        .toggle-mini .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #cbd5e1; transition: .3s; border-radius: 34px; }
+        .toggle-mini .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background: white; transition: .3s; border-radius: 50%;}
+        .toggle-mini input:checked + .slider { background: var(--primary); }
+        .toggle-mini input:checked + .slider:before { transform: translateX(16px); }
+
+        .toggle-box { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 1.25rem; border-radius: 0.75rem; border: 1px solid var(--border); margin-bottom: 0;}
+        .switch { position: relative; display: inline-block; width: 48px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .switch .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #cbd5e1; transition: .3s; border-radius: 34px; }
+        .switch .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; transition: .3s; border-radius: 50%;}
+        .switch input:checked + .slider { background: var(--primary); }
+        .switch input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Toast Area */
+        .toast-container { position: fixed; bottom: 2rem; right: 2rem; display: flex; flex-direction: column; gap: 1rem; z-index: 100; }
+        .toast { background: white; border-left: 4px solid var(--success); padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 1rem; animation: slideIn 0.3s; }
+        .toast.hide { opacity: 0; transform: translateX(100%); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast-icon { color: var(--success); }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        
+        <header class="top-nav">
+            <div class="top-nav-titles">
+                <h1>Entorno de Operaciones</h1>
+                <p>Gestión estructural de Inteligencia - Apps y Bases de Datos</p>
+            </div>
+            <nav class="nav-tabs">
+                <button class="nav-tab" id="tab-apps" onclick="switchView('apps')">1. Gestión de Apps</button>
+                <button class="nav-tab active" id="tab-db" onclick="switchView('db')">2. Catálogo DB</button>
+            </nav>
+        </header>
+
+        <!-- VISTA 1: GESTION DE APPS -->
+        <div id="view-apps" class="view-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.4rem; color:#0f172a;">Inventario de Versiones de Aplicación</h2>
+                <button class="btn" onclick="openAppModal()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                    Registrar Nueva Versión (App)
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="table-container">
+                    <table id="appsTable">
+                        <thead>
+                            <tr>
+                                <th width="15%">Fecha Registro</th>
+                                <th width="20%">Proyecto</th>
+                                <th width="20%">Plataforma</th>
+                                <th width="45%">Versión Lanzada</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 2: CATALOGO DB (Original evolucionada) -->
+        <div id="view-db" class="view-section active">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.4rem; color:#0f172a;">Vinculación de Bases de Datos</h2>
+                <button class="btn" onclick="openDbModal()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                    Vincular Archivo BD a Apps
+                </button>
+            </div>
+
+            <div class="summary-grid" id="summaryGrid"></div>
+
+            <div class="card">
+                <div class="table-toolbar">
+                    <h3>Historial de Enlaces BD</h3>
+                </div>
+                
+                <div class="filters-container">
+                    <div class="filter-item">
+                        <label>Proyecto</label>
+                        <select id="filterProj" onchange="applyFilters()">
+                            <option value="ALL">Todos los Proyectos</option>
+                            <option value="TQ">TQ Inteligencia</option>
+                            <option value="Nestle">Nestlé</option>
+                            <option value="Nutresa">Nutresa</option>
+                            <option value="Polar">Polar</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="catalogTable">
+                        <thead>
+                            <tr>
+                                <th width="10%">Fecha</th>
+                                <th width="12%">Proyecto</th>
+                                <th width="10%">Entorno</th>
+                                <th width="24%">Android (Min - Max)</th>
+                                <th width="24%">iOS (Min - Max)</th>
+                                <th width="16%">Archivo DB</th>
+                                <th width="4%" style="text-align:center">DL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL 1: REGISTRAR APP VERSION -->
+    <div class="modal-overlay" id="appModalOverlay">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2>Registrar Versión Lanzada</h2>
+                <button class="close-btn" onclick="document.getElementById('appModalOverlay').classList.remove('open')">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="appForm" onsubmit="event.preventDefault(); saveAppRegistration();">
+                    <div class="form-group">
+                        <label class="main-label">Proyecto</label>
+                        <select id="appProj" required>
+                            <option value="" disabled selected>Selecciona Proyecto...</option>
+                            <option value="TQ">TQ Inteligencia</option>
+                            <option value="Nestle">Nestlé</option>
+                            <option value="Nutresa">Nutresa</option>
+                            <option value="Polar">Polar</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="main-label">Plataforma</label>
+                        <select id="appPlat" required>
+                            <option value="android">Android</option>
+                            <option value="ios">iOS</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0">
+                        <label class="main-label">Nueva Versión</label>
+                        <input type="text" id="appVer" placeholder="Ej. 29 o 2026.10" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" style="background: white; color: var(--text-dark); border: 1px solid var(--border); box-shadow:none;" onclick="document.getElementById('appModalOverlay').classList.remove('open')">Cancelar</button>
+                <button type="button" class="btn" onclick="saveAppRegistration()">Registrar en Inventario</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL 2: VINCULAR DB (Evolucionado relacional) -->
+    <div class="modal-overlay" id="dbModalOverlay">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>Vincular Base de Datos a Apps</h2>
+                <button class="close-btn" onclick="document.getElementById('dbModalOverlay').classList.remove('open')">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div style="background: #e0f2fe; color: #0369a1; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; font-size: 0.85rem; border: 1px solid #bae6fd;">
+                    <strong>Fase 2:</strong> Aquí enlazas una base de datos a las versiones de aplicación que previamente registraste en el "Inventario de Versiones". Selecciona el rango de soporte para tu archivo .db.
+                </div>
+
+                <form id="dbForm" onsubmit="event.preventDefault(); saveDbRegistration();">
+                    <div class="form-row" style="margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label class="main-label">Proyecto Base</label>
+                            <select id="dbSelectProject" required onchange="renderPlatformRelationBoxes()">
+                                <option value="" disabled selected>Elige un proyecto...</option>
+                                <option value="TQ">TQ Inteligencia</option>
+                                <option value="Nestle">Nestlé</option>
+                                <option value="Nutresa">Nutresa</option>
+                                <option value="Polar">Polar</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="main-label">Grupo de Entorno</label>
+                            <select id="dbSelectGroup" required>
+                                <option value="7" selected>Producción = 7</option>
+                                <option value="0">Desarrollo = 0</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="platform-grid" id="platformRelationsGrid">
+                        <div style="grid-column: span 2; padding: 2rem 0; text-align:center; color: var(--text-muted); font-size:0.95rem;">
+                            Esperando selección de proyecto...
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="main-label">Archivo Base de Datos en Storage</label>
+                        <div style="position: relative;">
+                            <input type="text" id="dbInputName" placeholder="unificada_.db" required style="font-family: monospace; color: var(--primary);">
+                        </div>
+                    </div>
+
+                    <div class="toggle-box" style="margin-top: 1rem;">
+                        <div style="flex:1">
+                            <strong style="display:block; font-size: 0.95rem; color: #0f172a;">Replicar al entorno contrario</strong>
+                            <span style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">Clonará automáticamente esta regla hacia el otro Grupo (ej. de Prod a Dev) para paridad.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="dbInputSync" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" style="background: white; color: var(--text-dark); border: 1px solid var(--border); box-shadow:none;" onclick="document.getElementById('dbModalOverlay').classList.remove('open')">Cancelar</button>
+                <button type="button" class="btn" id="dbBtnSave" onclick="saveDbRegistration()">Crear Vínculo de DB</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal-overlay" id="previewModalOverlay">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Detalle de Proyecto</h2>
+                <button class="close-btn" onclick="document.getElementById('previewModalOverlay').classList.remove('open')">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="previewModalBody">
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button type="button" class="btn" style="background: white; color: var(--text-dark); border: 1px solid var(--border); box-shadow:none;" onclick="document.getElementById('previewModalOverlay').classList.remove('open')">Cerrar Visualización</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Area -->
+    <div class="toast-container" id="toastArea"></div>
+
+    <script>
+        // CONFIG DB Globals
+        const projectData = {
+            'TQ': { name: 'TQ Inteligencia', code: '15164', android: 'com.marketteam.inteligenciatq', ios: 'com.marketteam.inteligenciatq' },
+            'Nestle': { name: 'Nestlé', code: '15271', android: 'com.marketteam.inteligenciant', ios: 'com.marketteam.inteligencianestle' },
+            'Nutresa': { name: 'Nutresa', code: '15276', android: 'com.marketteam.inteligenciaclinu', ios: 'com.marketteam.InteligenciaCliNu' },
+            'Polar': { name: 'Polar', code: '15197', android: 'com.marketteam.inteligenciapolar', ios: 'com.marketteam.inteligenciapolar' }
+        };
+
+        const svgAndroid = '<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" style="flex-shrink:0; color:var(--android-color);"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0004.5511-.4482.9997-.9993.9997zm-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997zm11.4045-6.02l1.9973-3.4592a.415.415 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.022 3.503c-1.4362-.6449-3.1365-1.0406-4.965-1.0406-1.8285 0-3.5288.3957-4.9654 1.0402l-2.022-3.5026a.414.414 0 00-.5676-.1521.415.415 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1704.3432 14.6589 0 18.761h24c-.3436-4.1021-2.6893-7.5906-6.1185-13.4396z"/></svg>';
+        const svgIos = '<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" style="flex-shrink:0; color:var(--ios-color);"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M12.03 7.25c-.15-2.29 1.72-4.17 4.04-4.25.15 2.29-1.72 4.17-4.04 4.25z"/></svg>';
+
+        // DATA STORE 1: APP INVENTORY
+        let mockApps = [
+            { id: 1, proj: 'TQ', plat: 'android', ver: '28', date: '30/03/2026' },
+            { id: 2, proj: 'TQ', plat: 'android', ver: '29', date: '31/03/2026' },
+            { id: 3, proj: 'TQ', plat: 'ios', ver: '2026.0210.0', date: '25/03/2026' },
+            { id: 4, proj: 'TQ', plat: 'ios', ver: '2026.0211.3', date: '31/03/2026' },
+            { id: 5, proj: 'Nestle', plat: 'android', ver: '125', date: '28/03/2026' },
+            { id: 6, proj: 'Nestle', plat: 'android', ver: '126', date: '30/03/2026' },
+            { id: 7, proj: 'Nestle', plat: 'ios', ver: '2025.10', date: '30/03/2026' },
+        ];
+
+        // DATA STORE 2: DB LINKING
+        let mockDB = [
+            { id: 101, date: '31/03/2026 10:45', proj: 'TQ', group: '7', andMin: '29', andMax: 'MAX', iosMin: '2026.0211.3', iosMax: 'MAX', db: 'unificada_15164_3103.db' },
+            { id: 102, date: '30/03/2026 14:20', proj: 'Nestle', group: '7', andMin: '125', andMax: '126', iosMin: '2025.10', iosMax: 'MAX', db: 'unificada_15271_3003.db' }
+        ];
+
+        let currentView = 'db'; // apps | db
+
+        // INIT
+        window.onload = () => {
+            renderAppsTable();
+            renderDbCatalog();
+        };
+
+        // Delegación de eventos global para asegurar que cierre al dar clic por fuera en CUALQUIER escenario
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('open');
+            }
+        });
+
+        // --- NAVIGATION TABS ---
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('view-' + viewId).classList.add('active');
+            document.getElementById('tab-' + viewId).classList.add('active');
+            currentView = viewId;
+        }
+
+        // --- APP INVENTORY LOGIC ---
+        function openAppModal() {
+            document.getElementById('appForm').reset();
+            document.getElementById('appModalOverlay').classList.add('open');
+        }
+
+        function saveAppRegistration() {
+            const p = document.getElementById('appProj').value;
+            const pt = document.getElementById('appPlat').value;
+            const v = document.getElementById('appVer').value;
+            if(!p || !v) return;
+
+            mockApps.unshift({
+                id: Date.now(), proj: p, plat: pt, ver: v,
+                date: new Date().toLocaleDateString('en-GB')
+            });
+            document.getElementById('appModalOverlay').classList.remove('open');
+            renderAppsTable();
+            showToast(`Versión ${v} registrada en el inventario para ${projectData[p].name}`);
+        }
+
+        function renderAppsTable() {
+            const tb = document.getElementById('appsTableBody');
+            tb.innerHTML = '';
+            if(mockApps.length === 0) tb.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 2rem;">No hay aplicaciones registradas.</td></tr>`;
+            
+            mockApps.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><div class="date-text">${row.date}</div></td>
+                    <td><strong>${projectData[row.proj].name}</strong></td>
+                    <td>${row.plat === 'android' ? `<span class="pkg-pill android">${svgAndroid} Android</span>` : `<span class="pkg-pill ios">${svgIos} iOS</span>`}</td>
+                    <td><span class="ver-highlight" style="font-family:monospace; font-size: 1rem;">v${row.ver}</span></td>
+                `;
+                tb.appendChild(tr);
+            });
+        }
+
+
+        // --- DB RELATION LOGIC ---
+        
+        function openDbModal() {
+            document.getElementById('dbForm').reset();
+            document.getElementById('platformRelationsGrid').innerHTML = `<div style="grid-column: span 2; padding: 2rem 0; text-align:center; color: var(--text-muted); font-size:0.95rem;">Selecciona un Proyecto Base primero.</div>`;
+            document.getElementById('dbBtnSave').disabled = true;
+            document.getElementById('dbModalOverlay').classList.add('open');
+        }
+
+        function renderPlatformRelationBoxes() {
+            const projKey = document.getElementById('dbSelectProject').value;
+            if(!projKey) return;
+
+            const ts = new Date();
+            document.getElementById('dbInputName').placeholder = `Ej: unificada_${projectData[projKey].code}_${String(ts.getDate()).padStart(2,'0')}${String(ts.getMonth()+1).padStart(2,'0')}.db`;
+            document.getElementById('dbInputName').value = '';
+
+            // Pull available apps
+            const andApps = mockApps.filter(a => a.proj === projKey && a.plat === 'android');
+            const iosApps = mockApps.filter(a => a.proj === projKey && a.plat === 'ios');
+
+            const buildOptions = (appsList) => {
+                if(appsList.length === 0) return `<option value="" disabled selected>-- No registradas --</option>`;
+                return appsList.map(a => `<option value="${a.ver}">v${a.ver}</option>`).join('');
+            };
+
+            const renderBox = (plat, icon, appsList) => {
+                const hasApps = appsList.length > 0;
+                const opts = buildOptions(appsList);
+                return `
+                <div class="box-section" id="box_${plat}">
+                    <div class="box-section-header" style="margin-bottom:0">
+                        <div class="box-section-title">${icon} ${plat === 'android' ? 'Android' : 'iOS'}</div>
+                        <label class="toggle-mini">
+                            <input type="checkbox" id="chk_${plat}" ${hasApps ? 'checked' : 'disabled'} onchange="toggleRelBox('${plat}')">
+                            <span class="slider" style="${!hasApps ? 'background:#cbd5e1' : ''}"></span>
+                        </label>
+                    </div>
+                    ${!hasApps ? `<div style="font-size:0.75rem; color:var(--danger); padding:0.5rem; background:#fee2e2; border-radius:0.5rem; margin-top:0.5rem;">No hay versiones app registradas. Ve a la pestaña de 'Gestión de Apps' primero.</div>` : ''}
+                    
+                    <div style="margin-top: 1rem;">
+                        <label class="main-label">Versión Mínima de aplicación <span style="color:var(--danger)">*</span></label>
+                        <select id="min_${plat}" ${!hasApps ? 'disabled' : ''} style="margin-bottom: 0.5rem;">${opts}</select>
+
+                        <label class="main-label">Versión Máxima de aplicación (Opcional)</label>
+                        <select id="max_${plat}" ${!hasApps ? 'disabled' : ''}>
+                            <option value="MAX">-- Sin límite superior --</option>
+                            ${opts}
+                        </select>
+                    </div>
+                </div>`;
+            };
+
+            const grid = document.getElementById('platformRelationsGrid');
+            grid.innerHTML = renderBox('android', svgAndroid, andApps) + renderBox('ios', svgIos, iosApps);
+
+            // Enable save if at least one platform has apps
+            document.getElementById('dbBtnSave').disabled = (andApps.length === 0 && iosApps.length === 0);
+        }
+
+        function toggleRelBox(plat) {
+            const isChecked = document.getElementById('chk_' + plat).checked;
+            document.getElementById('box_' + plat).classList.toggle('inactive', !isChecked);
+            document.getElementById('min_' + plat).disabled = !isChecked;
+            document.getElementById('max_' + plat).disabled = !isChecked;
+        }
+
+        function saveDbRegistration() {
+            const p = document.getElementById('dbSelectProject').value;
+            const g = document.getElementById('dbSelectGroup').value;
+            const db = document.getElementById('dbInputName').value;
+            
+            const andOn = document.getElementById('chk_android') && document.getElementById('chk_android').checked;
+            const iosOn = document.getElementById('chk_ios') && document.getElementById('chk_ios').checked;
+
+            if(!andOn && !iosOn) { alert("Debes habilitar al menos una plataforma."); return; }
+            if(!db) { alert("El nombre de la DB es obligatorio."); return; }
+
+            const d = new Date();
+            const dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+
+            mockDB.unshift({
+                id: Date.now(), date: dateStr, proj: p, group: g, db: db,
+                andMin: andOn ? document.getElementById('min_android').value : '-',
+                andMax: andOn ? document.getElementById('max_android').value : '-',
+                iosMin: iosOn ? document.getElementById('min_ios').value : '-',
+                iosMax: iosOn ? document.getElementById('max_ios').value : '-'
+            });
+
+            applyFilters();
+            renderSummaryCards();
+            document.getElementById('dbModalOverlay').classList.remove('open');
+            showToast('Catálogo actualizado con nuevas versiones mínimas y máximas.');
+        }
+
+        function renderDbCatalog() {
+            applyFilters();
+            renderSummaryCards();
+        }
+
+        function applyFilters() {
+            const fp = document.getElementById('filterProj') ? document.getElementById('filterProj').value : 'ALL';
+            const tb = document.getElementById('tableBody');
+            tb.innerHTML = '';
+            
+            let filtered = mockDB;
+            if(fp !== 'ALL') filtered = mockDB.filter(x => x.proj === fp);
+
+            filtered.forEach(row => {
+                const drawPkg = (plat, min, max) => {
+                    if(min === '-') return '<span style="color:#94a3b8; font-size:0.75rem">-- n/a --</span>';
+                    const maxStr = max !== 'MAX' ? ` <span>≤</span> <span class="ver-max">v${max}</span>` : `<span class="ver-max"> (sin límite)</span>`;
+                    const pill = plat==='android' ? `<span class="pkg-pill android">${svgAndroid} And</span>` : `<span class="pkg-pill ios">${svgIos} iOS</span>`;
+                    return `<div>${pill} <span class="ver-highlight" style="margin-left:0.5rem;">≥ v${min}</span> ${maxStr}</div><div class="pkg-subtext">${projectData[row.proj][plat]}</div>`;
+                };
+
+                const gb = row.group === '7' ? `<span class="badge" style="background:var(--success-bg); color:#065f46;">Prod = 7</span>` : `<span class="badge" style="background:var(--dev-bg); color:var(--dev-text);">Dev = 0</span>`;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><div class="date-text">${row.date}</div></td>
+                    <td><strong style="color:#0f172a">${projectData[row.proj].name}</strong></td>
+                    <td>${gb}</td>
+                    <td>${drawPkg('android', row.andMin, row.andMax)}</td>
+                    <td>${drawPkg('ios', row.iosMin, row.iosMax)}</td>
+                    <td><div class="db-monotext">${row.db}</div></td>
+                    <td style="text-align:center"><button class="btn-icon-dl" onclick="triggerDownload('${row.db}')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></button></td>
+                `;
+                tb.appendChild(tr);
+            });
+        }
+
+        function renderSummaryCards() {
+            const container = document.getElementById('summaryGrid');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            Object.keys(projectData).forEach(projKey => {
+                const lp = mockDB.find(m => m.proj === projKey && m.group === '7');
+                const ld = mockDB.find(m => m.proj === projKey && m.group === '0');
+                if(!lp && !ld) return;
+
+                const buildPlats = (r) => {
+                    if(!r) return '<span style="color:var(--text-muted)">Vacío</span>';
+                    let html = '';
+                    if(r.andMin !== '-') html += `<span>${svgAndroid} ≥ <b>${r.andMin}</b></span>`;
+                    if(r.andMin !== '-' && r.iosMin !== '-') html += `<span style="color:var(--border);">|</span>`;
+                    if(r.iosMin !== '-') html += `<span>${svgIos} ≥ <b>${r.iosMin}</b></span>`;
+                    return html;
+                };
+
+                container.innerHTML += `
+                <div class="sc-card" onclick="openPreviewInfo('${projKey}')">
+                    <div class="hint-icon">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    </div>
+                    <div class="sc-title">${projectData[projKey].name}</div>
+                    <div class="sc-section">
+                        <div class="sc-head"><span class="sc-dot" style="background:var(--success)"></span> Producción (G7)</div>
+                        <div class="sc-db">${lp ? lp.db : '--'}</div>
+                        <div class="sc-plats">${buildPlats(lp)}</div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function openPreviewInfo(projKey) {
+            const data = projectData[projKey];
+            const latestProd = mockDB.find(m => m.proj === projKey && m.group === '7');
+            const latestDev = mockDB.find(m => m.proj === projKey && m.group === '0');
+
+            if(!latestProd && !latestDev) return;
+
+            const body = document.getElementById('previewModalBody');
+            body.innerHTML = `
+                <div style="font-size:1.5rem; font-weight:700; color:var(--text-dark); margin-bottom: 0.5rem; text-align:center;">${data.name}</div>
+                <div style="text-align:center; color:var(--text-muted); font-size:0.85rem; margin-bottom: 2rem;">Configuración Detallada</div>
+
+                <div class="form-group" style="padding: 1.25rem; border: 1px solid var(--border); border-radius: 0.5rem; background: #fff;">
+                    <div style="display:flex; justify-content:space-between; border-bottom:1px dashed var(--border); padding-bottom:0.75rem; margin-bottom:0.75rem;">
+                        <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Base Producción (=7)</span>
+                        <span style="font-family:monospace; color:var(--primary); font-weight:600; font-size: 0.95rem;">${latestProd ? latestProd.db : '-- Vacío --'}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Base Desarrollo (=0)</span>
+                        <span style="font-family:monospace; color:var(--text-dark); font-weight:600; font-size: 0.95rem;">${latestDev ? latestDev.db : '-- Vacío --'}</span>
+                    </div>
+                </div>
+
+                <div class="form-group" style="padding: 1.25rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--bg-body);">
+                    <div style="display:flex; justify-content:space-between; border-bottom:1px dashed var(--border); padding-bottom:0.75rem; margin-bottom:0.75rem;">
+                        <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Paquete Android Global</span>
+                        <span style="font-family:monospace; font-size:0.85rem; color:#1e293b">${data.android}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Paquete iOS Global</span>
+                        <span style="font-family:monospace; font-size:0.85rem; color:#1e293b">${data.ios}</span>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('previewModalOverlay').classList.add('open');
+        }
+
+        function triggerDownload(filename) { 
+            showToast('Iniciando descarga: ' + filename);
+            const exampleUrl = "https://firebasestorage.googleapis.com/v0/b/tq-project-ffd6a.firebasestorage.app/o/inputs%2Fdatabases%2Funificada_15164_05032026_1800.db?alt=media&token=bbd219ed-9c28-40a4-aa0d-5ddf708d30f1";
+            const a = document.createElement('a');
+            a.href = exampleUrl;
+            a.target = "_blank";
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function showToast(msg) {
+            const t = document.createElement('div'); t.className = 'toast';
+            t.innerHTML = `<svg class="toast-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><div style="font-size:0.95rem; font-weight:500; color:#064e3b">${msg}</div>`;
+            document.getElementById('toastArea').appendChild(t);
+            setTimeout(() => { t.classList.add('hide'); setTimeout(()=>t.remove(),300); }, 4000);
+        }
+    </script>
+</body>
+</html>
