@@ -162,16 +162,35 @@
                     <table id="projTable">
                         <thead>
                             <tr>
-                                <th width="20%">Nombre del Proyecto</th>
-                                <th width="15%">Código Numérico</th>
-                                <th width="32.5%">Paquete Android</th>
-                                <th width="32.5%">Paquete iOS</th>
+                                <th width="25%">Nombre del Proyecto</th>
+                                <th width="37.5%">Paquete Android</th>
+                                <th width="37.5%">Paquete iOS</th>
                             </tr>
                         </thead>
                         <tbody id="projTableBody"></tbody>
                     </table>
                 </div>
             </div>
+
+            <!-- Historial de Códigos de DB -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 3.5rem; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.4rem; color:#0f172a;">Historial Códigos de BD</h2>
+                <button class="btn" onclick="openCodeModal()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                    Registrar Códigos del Mes
+                </button>
+            </div>
+            <div class="card">
+                <div class="table-container">
+                    <table id="codesTable">
+                        <thead id="codesTableHead">
+                            <!-- JS Fills Columns -->
+                        </thead>
+                        <tbody id="codesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
 
         <!-- VISTA 1: GESTION DE APPS -->
@@ -285,6 +304,44 @@
 
     </div>
 
+    <!-- MODAL -1: REGISTRAR CODIGOS MENSUALES -->
+    <div class="modal-overlay" id="codeModalOverlay">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Registrar Códigos Mensuales</h2>
+                <button class="close-btn" onclick="document.getElementById('codeModalOverlay').classList.remove('open')">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="codeForm" onsubmit="event.preventDefault(); saveCodes();">
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label class="main-label">Periodo (Mes/Año)</label>
+                        <input type="text" id="codePeriod" placeholder="Ej. Abril 2026" required>
+                    </div>
+                    <div class="toggle-box" style="margin-bottom: 1.5rem;">
+                        <div style="flex:1">
+                            <strong style="display:block; font-size: 0.95rem; color:#0f172a">Establecer como Actual</strong>
+                            <span style="font-size: 0.85rem; color: var(--text-muted); display:block; margin-top:0.25rem;">Marcará este mes como el vigente en el sistema.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="codeIsCurrent" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div id="dynamicCodeInputs" style="background: #f8fafc; border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem;">
+                        <!-- JS fills inputs -->
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" style="background: white; color: var(--text-dark); border: 1px solid var(--border); box-shadow:none;" onclick="document.getElementById('codeModalOverlay').classList.remove('open')">Cancelar</button>
+                <button type="button" class="btn" onclick="saveCodes()">Guardar Registro Cód.</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL 0: REGISTRAR PROYECTO -->
     <div class="modal-overlay" id="projModalOverlay">
         <div class="modal" style="max-width: 550px;">
@@ -296,15 +353,9 @@
             </div>
             <div class="modal-body">
                 <form id="projForm" onsubmit="event.preventDefault(); saveProjRegistration();">
-                    <div class="form-row" style="margin-bottom: 1.5rem;">
-                        <div class="form-group">
-                            <label class="main-label">Nombre del Proyecto</label>
-                            <input type="text" id="projName" placeholder="Ej. Novaventa" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="main-label">Código Numérico</label>
-                            <input type="text" id="projCode" placeholder="Ej. 12900" required>
-                        </div>
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label class="main-label">Nombre del Proyecto</label>
+                        <input type="text" id="projName" placeholder="Ej. Novaventa" required>
                     </div>
                     <div class="form-group" style="margin-bottom: 1.5rem;">
                         <label class="main-label"><span style="color:var(--android-color); font-weight:800; font-size:1.1em">🤖</span> Android Package Name</label>
@@ -467,11 +518,17 @@
     <script>
         // CONFIG DB Globals
         let projectData = {
-            'TQ': { name: 'TQ Inteligencia', code: '15164', android: 'com.marketteam.inteligenciatq', ios: 'com.marketteam.inteligenciatq' },
-            'Nestle': { name: 'Nestlé', code: '15271', android: 'com.marketteam.inteligenciant', ios: 'com.marketteam.inteligencianestle' },
-            'Nutresa': { name: 'Nutresa', code: '15276', android: 'com.marketteam.inteligenciaclinu', ios: 'com.marketteam.InteligenciaCliNu' },
-            'Polar': { name: 'Polar', code: '15197', android: 'com.marketteam.inteligenciapolar', ios: 'com.marketteam.inteligenciapolar' }
+            'TQ': { name: 'TQ Inteligencia', android: 'com.marketteam.inteligenciatq', ios: 'com.marketteam.inteligenciatq' },
+            'Nestle': { name: 'Nestlé', android: 'com.marketteam.inteligenciant', ios: 'com.marketteam.inteligencianestle' },
+            'Nutresa': { name: 'Nutresa', android: 'com.marketteam.inteligenciaclinu', ios: 'com.marketteam.InteligenciaCliNu' },
+            'Polar': { name: 'Polar', android: 'com.marketteam.inteligenciapolar', ios: 'com.marketteam.inteligenciapolar' }
         };
+
+        let mockCodes = [
+            { id: 1, period: 'Marzo 2026', isCurrent: true, codes: { TQ: '15164', Nestle: '15271', Nutresa: '15276', Polar: '15197' } },
+            { id: 2, period: 'Febrero 2026', isCurrent: false, codes: { TQ: '15140', Nestle: '15259', Nutresa: '15257', Polar: '15180' } },
+            { id: 3, period: 'Enero 2026', isCurrent: false, codes: { TQ: '15120', Nestle: '--', Nutresa: '15244', Polar: '--' } }
+        ];
 
         const svgAndroid = '<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" style="flex-shrink:0; color:var(--android-color);"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0004.5511-.4482.9997-.9993.9997zm-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997zm11.4045-6.02l1.9973-3.4592a.415.415 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.022 3.503c-1.4362-.6449-3.1365-1.0406-4.965-1.0406-1.8285 0-3.5288.3957-4.9654 1.0402l-2.022-3.5026a.414.414 0 00-.5676-.1521.415.415 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1704.3432 14.6589 0 18.761h24c-.3436-4.1021-2.6893-7.5906-6.1185-13.4396z"/></svg>';
         const svgIos = '<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" style="flex-shrink:0; color:var(--ios-color);"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M12.03 7.25c-.15-2.29 1.72-4.17 4.04-4.25.15 2.29-1.72 4.17-4.04 4.25z"/></svg>';
@@ -499,6 +556,7 @@
         window.onload = () => {
             refreshProjectSelects();
             renderProjTable();
+            renderCodesTable();
             renderAppsTable();
             renderDbCatalog();
         };
@@ -537,11 +595,10 @@
 
         function saveProjRegistration() {
             const name = document.getElementById('projName').value;
-            const code = document.getElementById('projCode').value;
             const andP = document.getElementById('projAnd').value;
             const iosP = document.getElementById('projIos').value;
             
-            if(!name || !code || !andP || !iosP) return;
+            if(!name || !andP || !iosP) return;
 
             const baseKey = name.replace(/[^a-zA-Z0-9]/g, '');
             let uniqueKey = baseKey;
@@ -551,10 +608,11 @@
                 counter++;
             }
 
-            projectData[uniqueKey] = { name: name, code: code, android: andP, ios: iosP };
+            projectData[uniqueKey] = { name: name, android: andP, ios: iosP };
             
             refreshProjectSelects();
             renderProjTable();
+            renderCodesTable();
             renderAppsTable();
             renderDbCatalog();
             
@@ -577,12 +635,82 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong style="color:#0f172a; font-size: 0.95rem;">${p.name}</strong></td>
-                    <td><span style="font-family:monospace; background:#f1f5f9; padding: 0.2rem 0.6rem; border-radius:0.4rem; color:var(--text-dark); border: 1px solid var(--border);">${p.code}</span></td>
                     <td><div style="font-size:0.8rem; font-family:monospace; color:var(--text-muted)">${p.android}</div></td>
                     <td><div style="font-size:0.8rem; font-family:monospace; color:var(--text-muted)">${p.ios}</div></td>
                 `;
                 tb.appendChild(tr);
             });
+        }
+
+        function renderCodesTable() {
+            const tbh = document.getElementById('codesTableHead');
+            const tb = document.getElementById('codesTableBody');
+            if(!tbh || !tb) return;
+
+            const projs = Object.keys(projectData);
+            let headHtml = `<tr><th width="20%">Periodo Registrado</th>`;
+            projs.forEach(k => { headHtml += `<th>${projectData[k].name}</th>`; });
+            headHtml += `</tr>`;
+            tbh.innerHTML = headHtml;
+
+            tb.innerHTML = '';
+            if(mockCodes.length === 0) {
+                 tb.innerHTML = `<tr><td colspan="${projs.length + 1}" style="text-align:center; padding: 2rem; color:var(--text-muted);">No hay historial de códigos reportados.</td></tr>`;
+                 return;
+            }
+
+            mockCodes.forEach(row => {
+                let rHtml = `
+                    <td>
+                        <strong style="color:#0f172a; font-size: 0.95rem;">${row.period}</strong>
+                        ${row.isCurrent ? `<span class="badge" style="background:var(--success-bg); color:#065f46; margin-left:0.5rem">Actual</span>` : ''}
+                    </td>
+                `;
+                projs.forEach(k => {
+                    const c = row.codes[k];
+                    const out = (c && c !== '--' && c !== '-- N/A --') ? `<span style="font-family:monospace; background:#e0f2fe; padding: 0.2rem 0.6rem; border-radius:0.4rem; color:#0369a1; border: 1px solid #bae6fd; font-weight:600;">${c}</span>` : `<span style="color:#cbd5e1; font-size:0.8rem;">-- vacío --</span>`;
+                    rHtml += `<td>${out}</td>`;
+                });
+                const tr = document.createElement('tr');
+                tr.innerHTML = rHtml;
+                tb.appendChild(tr);
+            });
+        }
+
+        function openCodeModal() {
+            document.getElementById('codeForm').reset();
+            const container = document.getElementById('dynamicCodeInputs');
+            container.innerHTML = `<h4 style="margin-bottom:1rem; color:var(--text-dark); font-size:0.9rem; border-bottom:1px dashed var(--border); padding-bottom:0.5rem;">Asignación de Códigos</h4>`;
+            
+            Object.keys(projectData).forEach(k => {
+                const prev = mockCodes.length > 0 ? mockCodes[0].codes[k] : '';
+                container.innerHTML += `
+                    <div class="form-group" style="margin-bottom: 0.75rem;">
+                        <label style="font-size: 0.8rem; font-weight: 600; color: #334155; display:block; margin-bottom:0.35rem;">👉 ${projectData[k].name}</label>
+                        <input type="text" id="input_code_${k}" placeholder="Anterior: ${prev && prev!=='--'&&prev!=='-- N/A --' ? prev : 'Ninguno'}" style="padding: 0.5rem 0.75rem;">
+                    </div>
+                `;
+            });
+            document.getElementById('codeModalOverlay').classList.add('open');
+        }
+
+        function saveCodes() {
+            const period = document.getElementById('codePeriod').value;
+            const isCur = document.getElementById('codeIsCurrent').checked;
+            if(!period) return;
+
+            const collected = {};
+            Object.keys(projectData).forEach(k => {
+                const val = document.getElementById('input_code_' + k).value;
+                collected[k] = val ? val : '--';
+            });
+
+            if (isCur) mockCodes.forEach(m => m.isCurrent = false);
+
+            mockCodes.unshift({ id: Date.now(), period: period, isCurrent: isCur, codes: collected });
+            renderCodesTable();
+            document.getElementById('codeModalOverlay').classList.remove('open');
+            showToast(`Códigos de ${period} registrados con éxito.`);
         }
 
         // --- APP INVENTORY LOGIC ---
@@ -655,7 +783,7 @@
             if(!projKey) return;
 
             const ts = new Date();
-            document.getElementById('dbInputName').placeholder = `Ej: unificada_${projectData[projKey].code}_${String(ts.getDate()).padStart(2,'0')}${String(ts.getMonth()+1).padStart(2,'0')}.db`;
+            document.getElementById('dbInputName').placeholder = `Ej: unificada_[código_${String(ts.getMonth()+1).padStart(2,'0')}]_${String(ts.getDate()).padStart(2,'0')}${String(ts.getMonth()+1).padStart(2,'0')}.db`;
             document.getElementById('dbInputName').value = '';
 
             // Pull available apps
