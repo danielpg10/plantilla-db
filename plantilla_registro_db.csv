@@ -1,0 +1,4 @@
+Proyecto,Paquete_Principal,Archivo_DB,Version_Minima_Android,Version_Minima_iOS,Aplicar_Tambien_a_Debug,Notas
+TQ,com.marketteam.inteligenciatq,unificada_15164_27032026_1300.db,29,2026.0211.3,SI,Actualizacion de columnas t8
+Nestle,com.marketteam.inteligencianestle,unificada_nestle_123.db,126,2026.0304.1,NO,Solo version release
+Nutresa,com.marketteam.inteligenciaclinu,unificada_nutresa_456.db,,2025.0820.2,SI,Solo afecta a iOS y a su version debug
