@@ -99,8 +99,8 @@
         .form-group { margin-bottom: 1.5rem; }
         .form-row { display: flex; gap: 1.25rem; }
         .form-row .form-group { flex: 1; margin-bottom: 0;}
-        input[type="text"], select { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 0.5rem; font-size: 0.95rem; background: #fff; color: #0f172a; transition: all 0.2s;}
-        input:focus:not(:disabled), select:focus:not(:disabled) { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        input[type="text"], select, textarea { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 0.5rem; font-size: 0.95rem; background: #fff; color: #0f172a; transition: all 0.2s;}
+        input:focus:not(:disabled), select:focus:not(:disabled), textarea:focus:not(:disabled) { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
         select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2em;}
         select:disabled { opacity: 0.5; background-color: #f8fafc;}
         
@@ -142,10 +142,37 @@
                 <p>Gestión estructural de Inteligencia - Apps y Bases de Datos</p>
             </div>
             <nav class="nav-tabs">
-                <button class="nav-tab" id="tab-apps" onclick="switchView('apps')">1. Gestión de Apps</button>
-                <button class="nav-tab active" id="tab-db" onclick="switchView('db')">2. Catálogo DB</button>
+                <button class="nav-tab" id="tab-projects" onclick="switchView('projects')">1. Proyectos</button>
+                <button class="nav-tab" id="tab-apps" onclick="switchView('apps')">2. Historial Apps</button>
+                <button class="nav-tab active" id="tab-db" onclick="switchView('db')">3. Catálogo DB</button>
             </nav>
         </header>
+
+        <!-- VISTA 1: GESTION DE PROYECTOS -->
+        <div id="view-projects" class="view-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.4rem; color:#0f172a;">Directorio de Proyectos</h2>
+                <button class="btn" onclick="openProjModal()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                    Registrar Proyecto Base
+                </button>
+            </div>
+            <div class="card">
+                <div class="table-container">
+                    <table id="projTable">
+                        <thead>
+                            <tr>
+                                <th width="20%">Nombre del Proyecto</th>
+                                <th width="15%">Código Numérico</th>
+                                <th width="32.5%">Paquete Android</th>
+                                <th width="32.5%">Paquete iOS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
         <!-- VISTA 1: GESTION DE APPS -->
         <div id="view-apps" class="view-section">
@@ -158,14 +185,31 @@
             </div>
 
             <div class="card">
+                <div class="table-toolbar" style="padding: 1rem 1.5rem; background: #fff; border-bottom: 1px solid var(--border);">
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <select id="appFilterProj" onchange="renderAppsTable()" style="width:auto; padding: 0.5rem 2.25rem 0.5rem 0.75rem; font-size: 0.8rem; font-weight: 500; cursor:pointer;">
+                            <option value="ALL">Todos los Proyectos</option>
+                            <option value="TQ">TQ Inteligencia</option>
+                            <option value="Nestle">Nestlé</option>
+                            <option value="Nutresa">Nutresa</option>
+                            <option value="Polar">Polar</option>
+                        </select>
+                        <select id="appFilterPlat" onchange="renderAppsTable()" style="width:auto; padding: 0.5rem 2.25rem 0.5rem 0.75rem; font-size: 0.8rem; font-weight: 500; cursor:pointer;">
+                            <option value="ALL">Todas las Plataformas</option>
+                            <option value="android">Solo Android</option>
+                            <option value="ios">Solo iOS</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="table-container">
                     <table id="appsTable">
                         <thead>
                             <tr>
-                                <th width="15%">Fecha Registro</th>
-                                <th width="20%">Proyecto</th>
-                                <th width="20%">Plataforma</th>
-                                <th width="45%">Versión Lanzada</th>
+                                <th width="12%">Fecha Registro</th>
+                                <th width="18%">Proyecto</th>
+                                <th width="15%">Plataforma</th>
+                                <th width="15%">Versión / Build</th>
+                                <th width="40%">Notas de Release</th>
                             </tr>
                         </thead>
                         <tbody id="appsTableBody"></tbody>
@@ -202,6 +246,22 @@
                             <option value="Polar">Polar</option>
                         </select>
                     </div>
+                    <div class="filter-item">
+                        <label>Entorno (G7/G0)</label>
+                        <select id="filterGroup" onchange="applyFilters()">
+                            <option value="ALL">Ambos entornos (Prod / Dev)</option>
+                            <option value="7">Solo Producción = 7</option>
+                            <option value="0">Solo Desarrollo = 0</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>Soporte de Plataforma</label>
+                        <select id="filterPlat" onchange="applyFilters()">
+                            <option value="ALL">Indiferente (General)</option>
+                            <option value="android">Que incluyan Android</option>
+                            <option value="ios">Que incluyan iOS</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="table-container">
@@ -223,6 +283,44 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- MODAL 0: REGISTRAR PROYECTO -->
+    <div class="modal-overlay" id="projModalOverlay">
+        <div class="modal" style="max-width: 550px;">
+            <div class="modal-header">
+                <h2>Registrar Proyecto Base</h2>
+                <button class="close-btn" onclick="document.getElementById('projModalOverlay').classList.remove('open')">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="projForm" onsubmit="event.preventDefault(); saveProjRegistration();">
+                    <div class="form-row" style="margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label class="main-label">Nombre del Proyecto</label>
+                            <input type="text" id="projName" placeholder="Ej. Novaventa" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="main-label">Código Numérico</label>
+                            <input type="text" id="projCode" placeholder="Ej. 12900" required>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label class="main-label"><span style="color:var(--android-color); font-weight:800; font-size:1.1em">🤖</span> Android Package Name</label>
+                        <input type="text" id="projAnd" placeholder="Ej. com.novaventa.app" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0">
+                        <label class="main-label"><span style="color:var(--ios-color); font-weight:800; font-size:1.1em">🍎</span> iOS Bundle ID</label>
+                        <input type="text" id="projIos" placeholder="Ej. com.novaventa.app" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" style="background: white; color: var(--text-dark); border: 1px solid var(--border); box-shadow:none;" onclick="document.getElementById('projModalOverlay').classList.remove('open')">Cancelar</button>
+                <button type="button" class="btn" onclick="saveProjRegistration()">Guardar Proyecto</button>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL 1: REGISTRAR APP VERSION -->
@@ -253,9 +351,19 @@
                             <option value="ios">iOS</option>
                         </select>
                     </div>
-                    <div class="form-group" style="margin-bottom:0">
-                        <label class="main-label">Nueva Versión</label>
-                        <input type="text" id="appVer" placeholder="Ej. 29 o 2026.10" required>
+                    <div class="form-row" style="margin-bottom: 0;">
+                        <div class="form-group">
+                            <label class="main-label">Versión (Code/Build)</label>
+                            <input type="text" id="appVer" placeholder="Ej. 166" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="main-label">Nombre del Build</label>
+                            <input type="text" id="appBuildName" placeholder="Ej. 2.4.0">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0; margin-top: 1.5rem;">
+                        <label class="main-label">Notas de Release (Opcional)</label>
+                        <textarea id="appNotes" placeholder="Novedades de esta versión, bugs arreglados..." rows="3" style="resize: vertical; font-family: inherit;"></textarea>
                     </div>
                 </form>
             </div>
@@ -358,7 +466,7 @@
 
     <script>
         // CONFIG DB Globals
-        const projectData = {
+        let projectData = {
             'TQ': { name: 'TQ Inteligencia', code: '15164', android: 'com.marketteam.inteligenciatq', ios: 'com.marketteam.inteligenciatq' },
             'Nestle': { name: 'Nestlé', code: '15271', android: 'com.marketteam.inteligenciant', ios: 'com.marketteam.inteligencianestle' },
             'Nutresa': { name: 'Nutresa', code: '15276', android: 'com.marketteam.inteligenciaclinu', ios: 'com.marketteam.InteligenciaCliNu' },
@@ -370,13 +478,13 @@
 
         // DATA STORE 1: APP INVENTORY
         let mockApps = [
-            { id: 1, proj: 'TQ', plat: 'android', ver: '28', date: '30/03/2026' },
-            { id: 2, proj: 'TQ', plat: 'android', ver: '29', date: '31/03/2026' },
-            { id: 3, proj: 'TQ', plat: 'ios', ver: '2026.0210.0', date: '25/03/2026' },
-            { id: 4, proj: 'TQ', plat: 'ios', ver: '2026.0211.3', date: '31/03/2026' },
-            { id: 5, proj: 'Nestle', plat: 'android', ver: '125', date: '28/03/2026' },
-            { id: 6, proj: 'Nestle', plat: 'android', ver: '126', date: '30/03/2026' },
-            { id: 7, proj: 'Nestle', plat: 'ios', ver: '2025.10', date: '30/03/2026' },
+            { id: 1, proj: 'TQ', plat: 'android', ver: '28', buildName: '2.4.0', notes: 'Soporte offline para espacios.', date: '30/03/2026' },
+            { id: 2, proj: 'TQ', plat: 'android', ver: '29', buildName: '2.4.1', notes: 'Hotfix de login y métricas.', date: '31/03/2026' },
+            { id: 3, proj: 'TQ', plat: 'ios', ver: '2026.0210.0', buildName: 'v1.0-beta', notes: 'Actualización de framework principal.', date: '25/03/2026' },
+            { id: 4, proj: 'TQ', plat: 'ios', ver: '2026.0211.3', buildName: '', notes: '', date: '31/03/2026' },
+            { id: 5, proj: 'Nestle', plat: 'android', ver: '125', buildName: 'v3.5', notes: 'Sincronización de catálogos V2.', date: '28/03/2026' },
+            { id: 6, proj: 'Nestle', plat: 'android', ver: '126', buildName: 'v3.5.1', notes: '', date: '30/03/2026' },
+            { id: 7, proj: 'Nutresa', plat: 'android', ver: '166', buildName: 'Core 5.0', notes: 'Actualización global de base core.', date: '30/03/2026' },
         ];
 
         // DATA STORE 2: DB LINKING
@@ -389,6 +497,8 @@
 
         // INIT
         window.onload = () => {
+            refreshProjectSelects();
+            renderProjTable();
             renderAppsTable();
             renderDbCatalog();
         };
@@ -410,6 +520,71 @@
             currentView = viewId;
         }
 
+        // --- PROJECT LOGIC ---
+        function refreshProjectSelects() {
+            const optionsHtml = Object.keys(projectData).map(k => `<option value="${k}">${projectData[k].name}</option>`).join('');
+            
+            document.getElementById('appProj').innerHTML = `<option value="" disabled selected>Selecciona Proyecto...</option>` + optionsHtml;
+            document.getElementById('dbSelectProject').innerHTML = `<option value="" disabled selected>Elige un proyecto...</option>` + optionsHtml;
+            document.getElementById('appFilterProj').innerHTML = `<option value="ALL">Todos los Proyectos</option>` + optionsHtml;
+            document.getElementById('filterProj').innerHTML = `<option value="ALL">Todos los Proyectos</option>` + optionsHtml;
+        }
+
+        function openProjModal() {
+            document.getElementById('projForm').reset();
+            document.getElementById('projModalOverlay').classList.add('open');
+        }
+
+        function saveProjRegistration() {
+            const name = document.getElementById('projName').value;
+            const code = document.getElementById('projCode').value;
+            const andP = document.getElementById('projAnd').value;
+            const iosP = document.getElementById('projIos').value;
+            
+            if(!name || !code || !andP || !iosP) return;
+
+            const baseKey = name.replace(/[^a-zA-Z0-9]/g, '');
+            let uniqueKey = baseKey;
+            let counter = 1;
+            while(projectData[uniqueKey]) {
+                uniqueKey = baseKey + counter;
+                counter++;
+            }
+
+            projectData[uniqueKey] = { name: name, code: code, android: andP, ios: iosP };
+            
+            refreshProjectSelects();
+            renderProjTable();
+            renderAppsTable();
+            renderDbCatalog();
+            
+            document.getElementById('projModalOverlay').classList.remove('open');
+            showToast(`Proyecto ${name} registrado y disponible.`);
+        }
+
+        function renderProjTable() {
+            const tb = document.getElementById('projTableBody');
+            if(!tb) return;
+            tb.innerHTML = '';
+            
+            if(Object.keys(projectData).length === 0) {
+                 tb.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 2.5rem; color:var(--text-muted); font-size: 0.9rem;">No hay proyectos registrados aún.</td></tr>`;
+                 return;
+            }
+
+            Object.keys(projectData).forEach(k => {
+                const p = projectData[k];
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong style="color:#0f172a; font-size: 0.95rem;">${p.name}</strong></td>
+                    <td><span style="font-family:monospace; background:#f1f5f9; padding: 0.2rem 0.6rem; border-radius:0.4rem; color:var(--text-dark); border: 1px solid var(--border);">${p.code}</span></td>
+                    <td><div style="font-size:0.8rem; font-family:monospace; color:var(--text-muted)">${p.android}</div></td>
+                    <td><div style="font-size:0.8rem; font-family:monospace; color:var(--text-muted)">${p.ios}</div></td>
+                `;
+                tb.appendChild(tr);
+            });
+        }
+
         // --- APP INVENTORY LOGIC ---
         function openAppModal() {
             document.getElementById('appForm').reset();
@@ -420,10 +595,12 @@
             const p = document.getElementById('appProj').value;
             const pt = document.getElementById('appPlat').value;
             const v = document.getElementById('appVer').value;
+            const bn = document.getElementById('appBuildName') ? document.getElementById('appBuildName').value : '';
+            const resNotes = document.getElementById('appNotes') ? document.getElementById('appNotes').value : '';
             if(!p || !v) return;
 
             mockApps.unshift({
-                id: Date.now(), proj: p, plat: pt, ver: v,
+                id: Date.now(), proj: p, plat: pt, ver: v, buildName: bn, notes: resNotes,
                 date: new Date().toLocaleDateString('en-GB')
             });
             document.getElementById('appModalOverlay').classList.remove('open');
@@ -433,16 +610,31 @@
 
         function renderAppsTable() {
             const tb = document.getElementById('appsTableBody');
+            const fp = document.getElementById('appFilterProj') ? document.getElementById('appFilterProj').value : 'ALL';
+            const fpl = document.getElementById('appFilterPlat') ? document.getElementById('appFilterPlat').value : 'ALL';
+
             tb.innerHTML = '';
-            if(mockApps.length === 0) tb.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 2rem;">No hay aplicaciones registradas.</td></tr>`;
+
+            let filtered = mockApps;
+            if(fp !== 'ALL') filtered = filtered.filter(a => a.proj === fp);
+            if(fpl !== 'ALL') filtered = filtered.filter(a => a.plat === fpl);
+
+            if(filtered.length === 0) { 
+                tb.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 2.5rem; color:var(--text-muted); font-size: 0.9rem;">No hay registros acorde a tus filtros.</td></tr>`;
+                return;
+            }
             
-            mockApps.forEach(row => {
+            filtered.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><div class="date-text">${row.date}</div></td>
-                    <td><strong>${projectData[row.proj].name}</strong></td>
+                    <td><strong style="color:#0f172a">${projectData[row.proj].name}</strong></td>
                     <td>${row.plat === 'android' ? `<span class="pkg-pill android">${svgAndroid} Android</span>` : `<span class="pkg-pill ios">${svgIos} iOS</span>`}</td>
-                    <td><span class="ver-highlight" style="font-family:monospace; font-size: 1rem;">v${row.ver}</span></td>
+                    <td>
+                        <div class="ver-highlight" style="font-family:monospace; font-size: 1rem;">v${row.ver}</div>
+                        ${row.buildName ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">Build: ${row.buildName}</div>` : ''}
+                    </td>
+                    <td><div style="font-size: 0.8rem; color: var(--text-muted); max-height: 2.8em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="${row.notes || ''}">${row.notes ? row.notes : '<span style="opacity:0.3">--</span>'}</div></td>
                 `;
                 tb.appendChild(tr);
             });
@@ -472,7 +664,7 @@
 
             const buildOptions = (appsList) => {
                 if(appsList.length === 0) return `<option value="" disabled selected>-- No registradas --</option>`;
-                return appsList.map(a => `<option value="${a.ver}">v${a.ver}</option>`).join('');
+                return appsList.map(a => `<option value="${a.ver}">v${a.ver}${a.buildName ? ` (${a.buildName})` : ''}</option>`).join('');
             };
 
             const renderBox = (plat, icon, appsList) => {
@@ -551,11 +743,22 @@
 
         function applyFilters() {
             const fp = document.getElementById('filterProj') ? document.getElementById('filterProj').value : 'ALL';
+            const fg = document.getElementById('filterGroup') ? document.getElementById('filterGroup').value : 'ALL';
+            const fpl = document.getElementById('filterPlat') ? document.getElementById('filterPlat').value : 'ALL';
+            
             const tb = document.getElementById('tableBody');
             tb.innerHTML = '';
             
             let filtered = mockDB;
-            if(fp !== 'ALL') filtered = mockDB.filter(x => x.proj === fp);
+            if(fp !== 'ALL') filtered = filtered.filter(x => x.proj === fp);
+            if(fg !== 'ALL') filtered = filtered.filter(x => x.group === fg);
+            if(fpl === 'android') filtered = filtered.filter(x => x.andMin !== '-');
+            if(fpl === 'ios') filtered = filtered.filter(x => x.iosMin !== '-');
+
+            if(filtered.length === 0) {
+                tb.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2.5rem; color:var(--text-muted); font-size: 0.9rem;">No hay vínculos de base de datos para esta combinación de filtros.</td></tr>';
+                return;
+            }
 
             filtered.forEach(row => {
                 const drawPkg = (plat, min, max) => {

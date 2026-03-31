@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Inteligencia - Catálogo DB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #f1f5f9;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --card-bg: #ffffff;
+            --success: #10b981;
+            --success-bg: #d1fae5;
+            --android-color: #10b981;
+            --ios-color: #3b82f6;
+            --danger: #ef4444;
+            --dev-bg: #fef08a;
+            --dev-text: #854d0e;
+        }
+
+        * {
+            font-family: 'Inter', -apple-system, sans-serif;
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            font-size: 0.95rem;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Sleek Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .sc-card {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            padding: 1.25rem;
+            transition: transform 0.2s;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .sc-card:hover {
+            transform: translateY(-3px);
+            border-color: #cbd5e1;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .sc-title {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hint-icon {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .sc-card:hover .hint-icon {
+            opacity: 1;
+        }
+
+        .sc-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .sc-head {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        .sc-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .sc-dot.prod {
+            background: var(--success);
+        }
+
+        .sc-dot.dev {
+            background: #eab308;
+        }
+
+        .sc-db {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .sc-plats {
+            display: flex;
+            gap: 0.75rem;
+            font-size: 0.8rem;
+            color: #334155;
+        }
+
+        .sc-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0.8rem 0;
+            opacity: 0.5;
+        }
+
+        /* Filters Bar */
+        .filters-container {
+            display: flex;
+            gap: 1rem;
+            background: #fff;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .filter-item label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .filter-item select {
+            padding: 0.5rem 2rem 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            border: 1px solid var(--border);
+            border-radius: 0.4rem;
+        }
+
+        /* Main Table - Compacta */
+        .card {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .table-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: #f8fafc;
+        }
+
+        .table-toolbar h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            min-height: 300px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: #fff;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            letter-spacing: 0.05em;
+            font-weight: 700;
+        }
+
+        td {
+            padding: 0.65rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background: #f8fafc;
+        }
+
+        .pkg-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            font-family: monospace;
+            border: 1px solid var(--border);
+            background: #fff;
+        }
+
+        .pkg-pill.android {
+            border-color: #a7f3d0;
+            color: #065f46;
+            background: #ecfdf5;
+        }
+
+        .pkg-pill.ios {
+            border-color: #bfdbfe;
+            color: #1e3a8a;
+            background: #eff6ff;
+        }
+
+        .ver-highlight {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .pkg-subtext {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: monospace;
+            margin-left: 0.25rem;
+            margin-top: 0.1rem;
+            word-break: break-all;
+        }
+
+        .db-monotext {
+            font-family: monospace;
+            font-weight: 500;
+            color: #1e293b;
+            font-size: 0.85rem;
+        }
+
+        .date-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .badge {
+            padding: 0.2rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* Actions */
+        .btn-icon-dl {
+            background: #eff6ff;
+            color: var(--primary);
+            border: 1px solid #bfdbfe;
+            width: 32px;
+            height: 32px;
+            border-radius: 0.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            margin: auto;
+        }
+
+        .btn-icon-dl:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+        }
+
+        .page-info {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .page-ctrls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-page {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-page:hover:not(:disabled) {
+            background: #f1f5f9;
+        }
+
+        .btn-page:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Modal Resets & Specifics */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 1.25rem;
+            width: 100%;
+            max-width: 680px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transform: scale(0.95);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+        }
+
+        .modal-overlay.open .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background: #f8fafc;
+            border-radius: 1.25rem 1.25rem 0 0;
+        }
+
+        .modal-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .close-btn {
+            background: white;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f1f5f9;
+            color: var(--danger);
+        }
+
+        .modal-body {
+            padding: 2rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 1.25rem 2rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            background: #f8fafc;
+            border-radius: 0 0 1.25rem 1.25rem;
+        }
+
+        label.main-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            color: #334155;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1.25rem;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            background: #fff;
+            color: #0f172a;
+            transition: all 0.2s;
+        }
+
+        input:focus:not(:disabled),
+        select:focus:not(:disabled) {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.2em;
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .box-section {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .box-section.inactive {
+            opacity: 0.6;
+            background: #f1f5f9;
+            border-style: dashed;
+        }
+
+        .box-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .box-section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Toggles */
+        .toggle-mini {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .toggle-mini input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-mini .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #cbd5e1;
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .toggle-mini .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        .toggle-mini input:checked+.slider {
+            background: var(--primary);
+        }
+
+        .toggle-mini input:checked+.slider:before {
+            transform: translateX(16px);
+        }
+
+        .toggle-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            margin-bottom: 0;
+        }
+
+        .toggle-text strong {
+            display: block;
+            font-size: 0.95rem;
+            color: #0f172a;
+        }
+
+        .toggle-text span {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #cbd5e1;
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .switch .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        .switch input:checked+.slider {
+            background: var(--primary);
+        }
+
+        .switch input:checked+.slider:before {
+            transform: translateX(22px);
+        }
+
+        /* Toast Area */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .toast {
+            background: white;
+            border-left: 4px solid var(--success);
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideIn 0.3s;
+        }
+
+        .toast.hide {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-icon {
+            color: var(--success);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard">
+        <header class="header">
+            <div>
+                <h1>Dashboard - Catálogo BD</h1>
+                <p>Monitor de estado y vinculación de versiones móviles</p>
+            </div>
+            <button class="btn" onclick="openModal()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Registrar Versión
+            </button>
+        </header>
+
+        <!-- Summary Cards Limpias -->
+        <div class="summary-grid" id="summaryGrid">
+            <!-- Rendered by JS -->
+        </div>
+
+        <div class="card">
+            <div class="table-toolbar">
+                <h3>Historial de Registros</h3>
+            </div>
+
+            <!-- Barra de Filtros -->
+            <div class="filters-container">
+                <div class="filter-item">
+                    <label>Proyecto</label>
+                    <select id="filterProj" onchange="applyFilters()">
+                        <option value="ALL">Todos los Proyectos</option>
+                        <option value="TQ">TQ Inteligencia</option>
+                        <option value="Nestle">Nestlé</option>
+                        <option value="Nutresa">Nutresa</option>
+                        <option value="Polar">Polar</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>Grupo / Entorno</label>
+                    <select id="filterGroup" onchange="applyFilters()">
+                        <option value="ALL">Ambos Entornos</option>
+                        <option value="7">Producción (=7)</option>
+                        <option value="0">Desarrollo (=0)</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>Plataforma Configurada</label>
+                    <select id="filterPlat" onchange="applyFilters()">
+                        <option value="ALL">Cualquier Plataforma</option>
+                        <option value="AND">Contiene Android</option>
+                        <option value="IOS">Contiene iOS</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="catalogTable">
+                    <thead>
+                        <tr>
+                            <th width="12%">Fecha</th>
+                            <th width="14%">Proyecto</th>
+                            <th width="12%">Entorno</th>
+                            <th width="20%">Android</th>
+                            <th width="20%">iOS</th>
+                            <th width="16%">Archivo DB</th>
+                            <th width="6%" style="text-align:center">Descargar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Rendered by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <div class="page-info" id="pageInfo">Mostrando 0 registros</div>
+                <div class="page-ctrls">
+                    <button class="btn-page" id="btnPrev" onclick="prevPage()">Anterior</button>
+                    <button class="btn-page" id="btnNext" onclick="nextPage()">Siguiente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Form (Create) -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Vincular Base de Datos</h2>
+                <button class="close-btn" onclick="closeModal()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="dbForm" onsubmit="event.preventDefault(); saveRegistration();">
+
+                    <div class="form-row" style="margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label class="main-label">Proyecto Base</label>
+                            <select id="selectProject" required onchange="renderPlatformBoxes()">
+                                <option value="" disabled selected>Elige un proyecto para continuar...</option>
+                                <option value="TQ">TQ Inteligencia</option>
+                                <option value="Nestle">Nestlé</option>
+                                <option value="Nutresa">Nutresa</option>
+                                <option value="Polar">Polar</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="main-label">Grupo de Entorno</label>
+                            <select id="selectGroup" required onchange="updateGroupSyncText()">
+                                <option value="7" selected>Producción = 7</option>
+                                <option value="0">Desarrollo = 0</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="platform-grid" id="platformGridWrapper">
+                        <div
+                            style="grid-column: span 2; padding: 2rem 0; text-align:center; color: var(--text-muted); font-size:0.95rem;">
+                            Esperando selección de proyecto...
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="main-label">Nombre exacto del Archivo subido a Storage</label>
+                        <div style="position: relative;">
+                            <svg style="position: absolute; left: 1rem; top: 11px; color: #94a3b8;" width="20"
+                                height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path
+                                    d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
+                                </path>
+                            </svg>
+                            <input type="text" id="inputDbName" placeholder="unificada_tq_xyz.db" required
+                                style="padding-left: 2.75rem; font-family: monospace; color: var(--primary);">
+                        </div>
+                    </div>
+
+                    <div class="toggle-box" style="margin-top: 2rem;">
+                        <div class="toggle-text">
+                            <strong id="syncTitle">Replicar configuración al entorno de Desarrollo (0)</strong>
+                            <span id="syncDesc">Se clonará automáticamente este registro asegurando paridad.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="inputSyncEnv" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn"
+                    style="background: white; color: var(--text-dark); border: 1px solid var(--border); box-shadow:none;"
+                    onclick="closeModal()">Cancelar</button>
+                <button type="button" class="btn" onclick="saveRegistration()">Guardar Versión</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal (Info) -->
+    <div class="modal-overlay" id="previewModalOverlay">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Detalle de Proyecto</h2>
+                <button class="close-btn"
+                    onclick="document.getElementById('previewModalOverlay').classList.remove('open')">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" id="previewModalBody">
+                <!-- Injected via JS -->
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button type="button" class="btn"
+                    style="background: white; color: var(--text-dark); border: 1px solid var(--border); box-shadow:none;"
+                    onclick="document.getElementById('previewModalOverlay').classList.remove('open')">Cerrar
+                    Visualización</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Area -->
+    <div class="toast-container" id="toastArea"></div>
+
+    <script>
+        // CONFIG DB
+        const projectData = {
+            'TQ': { name: 'TQ Inteligencia', code: '15164', android: 'com.marketteam.inteligenciatq', ios: 'com.marketteam.inteligenciatq' },
+            'Nestle': { name: 'Nestlé', code: '15271', android: 'com.marketteam.inteligenciant', ios: 'com.marketteam.inteligencianestle' },
+            'Nutresa': { name: 'Nutresa', code: '15276', android: 'com.marketteam.inteligenciaclinu', ios: 'com.marketteam.InteligenciaCliNu' },
+            'Polar': { name: 'Polar', code: '15197', android: 'com.marketteam.inteligenciapolar', ios: 'com.marketteam.inteligenciapolar' }
+        };
+
+        // Date helper for mock data
+        const tDate = (offsetDays) => {
+            const d = new Date(); d.setDate(d.getDate() - offsetDays);
+            return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        };
+
+        // MOCK DATA (15 Items quemados con fecha de registro)
+        let mockDB = [
+            { id: 1, date: tDate(0), proj: 'TQ', group: '7', andVer: '29', andPkg: 'com.marketteam.inteligenciatq', iosVer: '2026.0211.3', iosPkg: 'com.marketteam.inteligenciatq', db: 'unificada_15164_2703.db' },
+            { id: 2, date: tDate(0), proj: 'Nestle', group: '7', andVer: '126', andPkg: 'com.marketteam.inteligenciant', iosVer: '2025.10', iosPkg: 'com.marketteam.inteligencianestle', db: 'unificada_15271_2703.db' },
+            { id: 3, date: tDate(1), proj: 'Nutresa', group: '0', andVer: '10', andPkg: 'com.marketteam.inteligenciaclinu', iosVer: '2025.08', iosPkg: 'com.marketteam.InteligenciaCliNu', db: 'unificada_15276_2703.db' },
+            { id: 4, date: tDate(1), proj: 'Polar', group: '7', andVer: '22', andPkg: 'com.marketteam.inteligenciapolar', iosVer: '2025.12', iosPkg: 'com.marketteam.inteligenciapolar', db: 'unificada_15197_2703.db' },
+            { id: 6, date: tDate(2), proj: 'TQ', group: '0', andVer: '29', andPkg: 'com.marketteam.inteligenciatq', iosVer: '2026.0211.3', iosPkg: 'com.marketteam.inteligenciatq', db: 'unificada_15164_2603.db' },
+            { id: 7, date: tDate(2), proj: 'Nestle', group: '0', andVer: '125', andPkg: 'com.marketteam.inteligenciant', iosVer: '2025.09', iosPkg: 'com.marketteam.inteligencianestle', db: 'unificada_15271_2603.db' },
+            { id: 8, date: tDate(2), proj: 'Polar', group: '0', andVer: '21', andPkg: 'com.marketteam.inteligenciapolar', iosVer: '2025.11', iosPkg: 'com.marketteam.inteligenciapolar', db: 'unificada_15197_2603.db' },
+            { id: 9, date: tDate(3), proj: 'TQ', group: '7', andVer: '28', andPkg: 'com.marketteam.inteligenciatq', iosVer: '-', iosPkg: '-', db: 'unificada_15164_2503.db' },
+            { id: 10, date: tDate(3), proj: 'Nutresa', group: '7', andVer: '9', andPkg: 'com.marketteam.inteligenciaclinu', iosVer: '2025.07', iosPkg: 'com.marketteam.InteligenciaCliNu', db: 'unificada_15276_2503.db' },
+            { id: 11, date: tDate(4), proj: 'TQ', group: '0', andVer: '28', andPkg: 'com.marketteam.inteligenciatq', iosVer: '2026.0210.0', iosPkg: 'com.marketteam.inteligenciatq', db: 'unificada_15164_2503.db' },
+            { id: 12, date: tDate(5), proj: 'Nestle', group: '7', andVer: '124', andPkg: 'com.marketteam.inteligenciant', iosVer: '2025.08', iosPkg: 'com.marketteam.inteligencianestle', db: 'unificada_15271_2403.db' },
+            { id: 13, date: tDate(5), proj: 'TQ', group: '7', andVer: '27', andPkg: 'com.marketteam.inteligenciatq', iosVer: '2026.0209.1', iosPkg: 'com.marketteam.inteligenciatq', db: 'unificada_15164_2403.db' },
+            { id: 14, date: tDate(5), proj: 'Polar', group: '7', andVer: '20', andPkg: 'com.marketteam.inteligenciapolar', iosVer: '2025.10', iosPkg: 'com.marketteam.inteligenciapolar', db: 'unificada_15197_2403.db' },
+            { id: 15, date: tDate(6), proj: 'Nutresa', group: '7', andVer: '-', andPkg: '-', iosVer: '2025.06', iosPkg: 'com.marketteam.InteligenciaCliNu', db: 'unificada_15276_2403.db' },
+            { id: 16, date: tDate(6), proj: 'Nestle', group: '0', andVer: '124', andPkg: 'com.marketteam.inteligenciant', iosVer: '2025.08', iosPkg: 'com.marketteam.inteligencianestle', db: 'unificada_15271_2403.db' },
+        ];
+
+        let filteredDB = [...mockDB];
+        let currentPage = 1;
+        const rowsPerPage = 10;
+
+        // ICONS
+        const svgAndroid = '<svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24" style="flex-shrink:0; color:var(--android-color);"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0004.5511-.4482.9997-.9993.9997zm-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997zm11.4045-6.02l1.9973-3.4592a.415.415 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.022 3.503c-1.4362-.6449-3.1365-1.0406-4.965-1.0406-1.8285 0-3.5288.3957-4.9654 1.0402l-2.022-3.5026a.414.414 0 00-.5676-.1521.415.415 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1704.3432 14.6589 0 18.761h24c-.3436-4.1021-2.6893-7.5906-6.1185-13.4396z"/></svg>';
+        const svgIos = '<svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24" style="flex-shrink:0; color:var(--ios-color);"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M12.03 7.25c-.15-2.29 1.72-4.17 4.04-4.25.15 2.29-1.72 4.17-4.04 4.25z"/></svg>';
+        const svgDownload = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>';
+
+        // INIT
+        window.onload = () => {
+            renderSummaryCards();
+            applyFilters();
+        };
+
+        // --- FILTERS ---
+        function applyFilters() {
+            const fProj = document.getElementById('filterProj').value;
+            const fGroup = document.getElementById('filterGroup').value;
+            const fPlat = document.getElementById('filterPlat').value;
+
+            filteredDB = mockDB.filter(row => {
+                let mProj = (fProj === 'ALL') ? true : (row.proj === fProj);
+                let mGroup = (fGroup === 'ALL') ? true : (row.group === fGroup);
+                let mPlat = true;
+                if (fPlat === 'AND') mPlat = (row.andVer !== '-');
+                if (fPlat === 'IOS') mPlat = (row.iosVer !== '-');
+                return mProj && mGroup && mPlat;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        // DOM Logic Modal
+        const modalOverlay = document.getElementById('modalOverlay');
+        const previewModalOverlay = document.getElementById('previewModalOverlay');
+        const selectProject = document.getElementById('selectProject');
+        const selectGroup = document.getElementById('selectGroup');
+        const platformGridWrapper = document.getElementById('platformGridWrapper');
+        const inputDbName = document.getElementById('inputDbName');
+
+        modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+        if (previewModalOverlay) { previewModalOverlay.addEventListener('click', (e) => { if (e.target === previewModalOverlay) previewModalOverlay.classList.remove('open'); }); }
+
+        function openModal() {
+            modalOverlay.classList.add('open');
+            document.getElementById('dbForm').reset();
+            platformGridWrapper.innerHTML = `<div style="grid-column: span 2; padding: 2rem 0; text-align:center; color: var(--text-muted); font-size:0.95rem;">Selecciona un proyecto arriba.</div>`;
+            updateGroupSyncText();
+        }
+
+        function closeModal() { modalOverlay.classList.remove('open'); }
+
+        function updateGroupSyncText() {
+            const val = selectGroup.value;
+            const title = document.getElementById('syncTitle');
+            if (val === '7') title.textContent = 'Replicar configuración al entorno de Desarrollo (0)';
+            else title.textContent = 'Replicar configuración al entorno de Producción (7)';
+        }
+
+        function togglePlatformBox(id) {
+            const chk = document.getElementById('chk_' + id);
+            const box = document.getElementById('box_' + id);
+            const inp = document.getElementById('inver_' + id);
+            if (chk.checked) { box.classList.remove('inactive'); inp.disabled = false; inp.focus(); }
+            else { box.classList.add('inactive'); inp.disabled = true; }
+        }
+
+        function renderPlatformBoxes() {
+            const projKey = selectProject.value;
+            if (!projectData[projKey]) return;
+
+            const data = projectData[projKey];
+            const ts = new Date();
+            inputDbName.placeholder = `unificada_${data.code}_${String(ts.getDate()).padStart(2, '0')}${String(ts.getMonth() + 1).padStart(2, '0')}.db`;
+
+            const renderBox = (plat, icon, color, pkgName) => `
+                <div class="box-section" id="box_${plat}">
+                    <div class="box-section-header">
+                        <div class="box-section-title" style="color:${color}">${icon} ${plat === 'android' ? 'Android' : 'iOS'}</div>
+                        <label class="toggle-mini"><input type="checkbox" id="chk_${plat}" checked onchange="togglePlatformBox('${plat}')"><span class="slider"></span></label>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0.5rem">
+                        <label class="main-label">Paquete (ID)</label>
+                        <div style="font-family:monospace; background:#fff; border:1px solid var(--border); padding:0.5rem; border-radius:0.5rem; font-size:0.8rem; color:#475569; word-break:break-all;">${pkgName}</div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0">
+                        <label class="main-label">Versión de aplicación</label>
+                        <input type="text" id="inver_${plat}" placeholder="Ej. ${plat === 'android' ? '29' : '2026.01'}" required>
+                    </div>
+                </div>`;
+
+            platformGridWrapper.innerHTML = renderBox('android', svgAndroid, 'var(--android-color)', data.android) + renderBox('ios', svgIos, 'var(--ios-color)', data.ios);
+        }
+
+        function saveRegistration() {
+            const projKey = selectProject.value;
+            const dbName = document.getElementById('inputDbName').value;
+            const groupVal = selectGroup.value;
+
+            if (!projKey || !dbName) return;
+            const data = projectData[projKey];
+            const andOn = document.getElementById('chk_android').checked;
+            const iosOn = document.getElementById('chk_ios').checked;
+
+            if (!andOn && !iosOn) { alert("Activa al menos una app."); return; }
+
+            const d = new Date();
+            const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+            const newRec = {
+                id: Date.now(), date: dateStr, proj: projKey, group: groupVal,
+                andVer: andOn ? document.getElementById('inver_android').value : '-', andPkg: andOn ? data.android : '-',
+                iosVer: iosOn ? document.getElementById('inver_ios').value : '-', iosPkg: iosOn ? data.ios : '-',
+                db: dbName
+            };
+
+            mockDB.unshift(newRec);
+            applyFilters();
+            renderSummaryCards();
+            closeModal();
+            showToast('Catálogo actualizado exitosamente.');
+        }
+
+        function triggerDownload(filename) {
+            showToast('Iniciando descarga: ' + filename);
+            const exampleUrl = "https://firebasestorage.googleapis.com/v0/b/tq-project-ffd6a.firebasestorage.app/o/inputs%2Fdatabases%2Funificada_15164_05032026_1800.db?alt=media&token=bbd219ed-9c28-40a4-aa0d-5ddf708d30f1";
+            const a = document.createElement('a');
+            a.href = exampleUrl;
+            a.target = "_blank";
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // --- Render Views ---
+
+        function renderSummaryCards() {
+            const container = document.getElementById('summaryGrid');
+            container.innerHTML = '';
+
+            Object.keys(projectData).forEach(projKey => {
+                const lp = mockDB.find(m => m.proj === projKey && m.group === '7');
+                const ld = mockDB.find(m => m.proj === projKey && m.group === '0');
+                if (!lp && !ld) return;
+
+                const buildPlats = (r) => {
+                    if (!r) return '<span style="color:var(--text-muted)">Vacío</span>';
+                    let html = '';
+                    if (r.andVer !== '-') html += `<span>And: <b>${r.andVer}</b></span>`;
+                    if (r.andVer !== '-' && r.iosVer !== '-') html += `<span style="color:var(--border);">|</span>`;
+                    if (r.iosVer !== '-') html += `<span>iOS: <b>${r.iosVer}</b></span>`;
+                    return html;
+                };
+
+                container.innerHTML += `
+                <div class="sc-card" onclick="openPreviewInfo('${projKey}')">
+                    <div class="hint-icon">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    </div>
+                    <div class="sc-title">${projectData[projKey].name}</div>
+                    
+                    <div class="sc-section">
+                        <div class="sc-head"><span class="sc-dot prod"></span> Producción (G7)</div>
+                        <div class="sc-db">${lp ? lp.db : '--'}</div>
+                        <div class="sc-plats">${buildPlats(lp)}</div>
+                    </div>
+                    
+                    <div class="sc-divider"></div>
+
+                    <div class="sc-section">
+                        <div class="sc-head"><span class="sc-dot dev"></span> Desarrollo (G0)</div>
+                        <div class="sc-db" style="color:var(--text-muted)">${ld ? ld.db : '--'}</div>
+                        <div class="sc-plats">${buildPlats(ld)}</div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function openPreviewInfo(projKey) {
+            const data = projectData[projKey];
+            const latestProd = mockDB.find(m => m.proj === projKey && m.group === '7');
+            const latestDev = mockDB.find(m => m.proj === projKey && m.group === '0');
+
+            if (!latestProd && !latestDev) return;
+
+            const body = document.getElementById('previewModalBody');
+            body.innerHTML = `
+                <div style="font-size:1.5rem; font-weight:700; color:var(--text-dark); margin-bottom: 0.5rem; text-align:center;">${data.name}</div>
+                <div style="text-align:center; color:var(--text-muted); font-size:0.85rem; margin-bottom: 2rem;">Configuración Detallada</div>
+
+                <div class="form-group" style="padding: 1.25rem; border: 1px solid var(--border); border-radius: 0.5rem; background: #fff;">
+                    <div style="display:flex; justify-content:space-between; border-bottom:1px dashed var(--border); padding-bottom:0.75rem; margin-bottom:0.75rem;">
+                        <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Base Producción (=7)</span>
+                        <span style="font-family:monospace; color:var(--primary); font-weight:600; font-size: 0.95rem;">${latestProd ? latestProd.db : '-- Vacío --'}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Base Desarrollo (=0)</span>
+                        <span style="font-family:monospace; color:var(--text-dark); font-weight:600; font-size: 0.95rem;">${latestDev ? latestDev.db : '-- Vacío --'}</span>
+                    </div>
+                </div>
+
+                <div class="form-group" style="padding: 1.25rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--bg-body);">
+                    <div style="display:flex; justify-content:space-between; border-bottom:1px dashed var(--border); padding-bottom:0.75rem; margin-bottom:0.75rem;">
+                        <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Paquete Android Global</span>
+                        <span style="font-family:monospace; font-size:0.85rem; color:#1e293b">${data.android}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Paquete iOS Global</span>
+                        <span style="font-family:monospace; font-size:0.85rem; color:#1e293b">${data.ios}</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('previewModalOverlay').classList.add('open');
+        }
+
+        function renderTable() {
+            const tb = document.getElementById('tableBody');
+            tb.innerHTML = '';
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const pageData = filteredDB.slice(start, end);
+
+            if (pageData.length === 0) {
+                tb.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color:var(--text-muted);">No hay registros que coincidan con los filtros.</td></tr>`;
+            }
+
+            pageData.forEach(row => {
+                const andH = (row.andVer !== '-') ? `<div><span class="pkg-pill android">${svgAndroid} <span class="ver-highlight">v${row.andVer}</span></span></div><div class="pkg-subtext">${row.andPkg}</div>` : '<span style="color:#94a3b8; font-size:0.75rem">-- n/a --</span>';
+                const iosH = (row.iosVer !== '-') ? `<div><span class="pkg-pill ios">${svgIos} <span class="ver-highlight">v${row.iosVer}</span></span></div><div class="pkg-subtext">${row.iosPkg}</div>` : '<span style="color:#94a3b8; font-size:0.75rem">-- n/a --</span>';
+
+                const gb = row.group === '7' ? `<span class="badge" style="background:var(--success-bg); color:#065f46;">Prod = 7</span>` : `<span class="badge" style="background:var(--dev-bg); color:var(--dev-text);">Dev = 0</span>`;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><div class="date-text">${row.date}</div></td>
+                    <td><strong style="color:#0f172a">${projectData[row.proj].name}</strong></td>
+                    <td>${gb}</td>
+                    <td>${andH}</td>
+                    <td>${iosH}</td>
+                    <td><div class="db-monotext">${row.db}</div></td>
+                    <td style="text-align:center">
+                        <button class="btn-icon-dl" title="Descargar DB" onclick="triggerDownload('${row.db}')">${svgDownload}</button>
+                    </td>
+                `;
+                tb.appendChild(tr);
+            });
+
+            document.getElementById('pageInfo').textContent = `Mostrando ${start + (filteredDB.length > 0 ? 1 : 0)} a ${Math.min(end, filteredDB.length)} de ${filteredDB.length} registros`;
+            document.getElementById('btnPrev').disabled = currentPage === 1;
+            document.getElementById('btnNext').disabled = end >= filteredDB.length;
+        }
+
+        function prevPage() { if (currentPage > 1) { currentPage--; renderTable(); } }
+        function nextPage() { if (currentPage * rowsPerPage < filteredDB.length) { currentPage++; renderTable(); } }
+
+        function showToast(msg) {
+            const t = document.createElement('div'); t.className = 'toast';
+            t.innerHTML = `<svg class="toast-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><div style="font-size:0.95rem; font-weight:500; color:#064e3b">${msg}</div>`;
+            document.getElementById('toastArea').appendChild(t);
+            setTimeout(() => { t.classList.add('hide'); setTimeout(() => t.remove(), 300); }, 4000);
+        }
+    </script>
+</body>
+
+</html>
